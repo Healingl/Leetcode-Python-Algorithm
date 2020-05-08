@@ -18,29 +18,25 @@ class TreeNode:
         self.right = None
 
 class Solution:
+    isBalance = True
+    def getTreeHeight(self, node):
+        if node == None:
+            return 0
 
-    def getHeight(self, node):
-        if node.left == None and node.right == None:
-            return 1
-        elif node.left != None and node.right != None:
-            return max(self.getHeight(node.left),self.getHeight(node.right)) + 1
-        elif node.left == None and node.right != None:
-            return self.getHeight(node.right)+ 1
-        elif node.left != None and node.right == None:
-            return self.getHeight(node.left) + 1
-        else:
-            pass
+        leftHeight = self.getTreeHeight(node.left)
+        rightHeight =self.getTreeHeight(node.right)
+
+        if abs(leftHeight - rightHeight) > 1:
+            self.isBalance = False
+
+        treeHeight = max(leftHeight,rightHeight) + 1
+
+        return treeHeight
 
 
     def isBalanced(self, root: TreeNode) -> bool:
 
-        height_diff = abs(self.getHeight(root.left)-self.getHeight(root.right))
-        if height_diff <= 1:
-            return True
-        else:
-            return False
+        self.getTreeHeight(root)
 
+        return self.isBalance
 
-
-if __name__  == "__main__":
-    pass
