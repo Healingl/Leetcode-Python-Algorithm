@@ -523,11 +523,11 @@ class Solution:
 **思路：**
 
 ```
-从根节点传值至叶子节点，从上至下，采用深度优先搜索算法即dfs，有递归公式：
+本质是从根节点累加至叶子节点，从上至下，采用深度优先搜索算法即dfs，有递归公式：
 
-h代表当前点深度，s(h)代表当前点二进制数（实际上是十进制表示的）,s(h-1)当前节点父节点的二进制数值，于是有递推关系，
+h代表当前点深度，s(h)代表当前点二进制数（实际上是十进制数表示的）,s(h-1)当前节点父节点的二进制数值，于是有递推公式：
 
-s(h) = s(h - 1) * 2 + r.val
+每层累加的值为：s(h) = s(h - 1) * 2 + r.val
 
 每次递归一层就多迭代一次公式，递归到底时就累加到全局总和里面，也可直接递归写返回值。
 ```
@@ -537,27 +537,31 @@ s(h) = s(h - 1) * 2 + r.val
 **解题代码：**
 
 ```
-# Definition for a binary tree node.
 class TreeNode:
     def __init__(self, x):
         self.val = x
         self.left = None
         self.right = None
 
-class Solution(object):
-    def sumRootToLeaf(self, root):
-        """
-        :type root: TreeNode
-        :rtype: int
-        """
-        return self.dfs_sum(root, 0)
-    def dfs_sum(self, root, base):
-        if root == None:
+class Solution:
+    #
+    def dfs_sum(self,root, bit_sum):
+        
+        if root is None:
             return 0
-        if root.left == None and root.right == None:
-            return 2 * base + root.val
-        base = 2 * base + root.val
-        return self.dfs_sum(root.left, base) + self.dfs_sum(root.right, base)
+            
+		# 终止条件中获得了从顶端累加的和
+        if root.left is None and root.right is None:
+            return 2*bit_sum + root.val
+	
+        bit_sum = 2*bit_sum + root.val
+
+        return self.dfs_sum(root.left,bit_sum) + self.dfs_sum(root.right,bit_sum)
+
+
+    def sumRootToLeaf(self, root: TreeNode) -> int:
+		# 从顶端开始深度优先搜索
+        return self.dfs_sum(root, 0)
 ```
 
 
@@ -588,7 +592,7 @@ class Solution(object):
 **思路：**
 
 ```
-深度优先搜索算法遍历左右子树
+深度优先搜索算法遍历左右子树，找到最长路径，但这里有个坑就是只考虑了根节点的最长路径，没有考虑子树中的最长路径，要解决这个问题需要对每个节点都要记录以此结点为根的直径情况：左子树高度+右子树高度
 ```
 
 
@@ -597,11 +601,58 @@ class Solution(object):
 
 **解题代码：**
 
-```
+开始的思路就掉坑里了，只考虑了根节点的最长路径，没有考虑子树中的最长路径，错误的解法：
 
 ```
+class TreeNode:
+    def __init__(self, x):
+        self.val = x
+        self.left = None
+        self.right = None
+
+class Solution:
+    #
+    def maxDepth(self,root):
+        if root is None:
+            return 0
+        return 1 + max(self.maxDepth(root.left),self.maxDepth(root.right))
+
+    def diameterOfBinaryTree(self, root: TreeNode) -> int:
+        if root.left is None and root.right is None:
+            return 0
+
+        return self.maxDepth(root.left) + self.maxDepth(root.right)
+```
+
+正确的解法（来源Leetcode社区）：
+
+```
+class TreeNode:
+    def __init__(self, x):
+        self.val = x
+        self.left = None
+        self.right = None
 
 
+class Solution(object):
+    def diameterOfBinaryTree(self, root):
+        self.ans = 1
+
+        def depth(node):
+            # 访问到空节点了，返回0
+            if not node: return 0
+            # 左儿子为根的子树的深度
+            L = depth(node.left)
+            # 右儿子为根的子树的深度
+            R = depth(node.right)
+            # 计算d_node即L+R+1 并更新ans
+            self.ans = max(self.ans, L+R+1)
+            # 返回该节点为根的子树的深度
+            return max(L, R) + 1
+
+        depth(root)
+        return self.ans - 1
+```
 
 
 
@@ -634,7 +685,7 @@ class Solution(object):
 **思路：**
 
 ```
-
+深度优先搜索算法，每个节点与其子节点进行值的绝对值相减
 ```
 
 
@@ -648,6 +699,8 @@ class Solution(object):
 
 
 ### 10.从先序遍历还原二叉树
+
+**（困难）**
 
 **题目：**
 
@@ -696,12 +749,38 @@ class Solution(object):
 **思路：**
 
 ```
+遍历字符串，遍历过程中可以通过对数字字符的累加以及'-'的计数来获得数值val及对应深度dep，即得即用无需长期存储。
+
+然后直接加入或覆盖键key为深度dep的树字典，字典的值value就是以val为值的树指针。
+
+且由先序遍历的特性可以知道，上一个遍历到的比自己深度浅1的节点必为自己的父节点，所以直接把当前节点加到这父节点下便可以把树连接起来了。
+
+最后返回字典里面深度为0的那值便是所求的树指针。
 
 ```
 
 **解题代码：**
 
 ```
-
+class Solution:
+    def recoverFromPreorder(self, S: str) -> TreeNode:
+        ans = {-1: TreeNode(0)}     #字典初始化
+        def addTree(v, p):          #添加树函数
+            ans[p] = TreeNode(int(v))
+            if not ans[p - 1].left: #左子树不存在就加在左边
+                ans[p - 1].left = ans[p]
+            else:                   #反之加在右边
+                ans[p - 1].right = ans[p]
+        val, dep = '', 0            #值和对应深度初始化
+        for c in S:
+            if c != '-':
+                val += c            #累加字符来获得数字
+            elif val:               #如果是‘-’且存在val
+                addTree(val, dep)   #就把累加好的数字和对应深度添加进树
+                val, dep = '', 1    #值和对应深度重新初始化
+            else:
+                dep += 1            #连续的‘-’只加深度不加值
+        addTree(val, dep)           #末尾剩余的数字也要加进树
+        return ans[0]
 ```
 

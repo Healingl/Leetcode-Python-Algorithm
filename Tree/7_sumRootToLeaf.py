@@ -11,25 +11,32 @@
 # @Desc: 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-# Definition for a binary tree node.
+
 class TreeNode:
     def __init__(self, x):
         self.val = x
         self.left = None
         self.right = None
 
-class Solution(object):
-    def sumRootToLeaf(self, root):
-        """
-        :type root: TreeNode
-        :rtype: int
-        """
-        return self.dfs_sum(root, 0)
-    def dfs_sum(self, root, base):
-        if root == None:
+class Solution:
+    #
+    def dfs_sum(self,root, bit_sum):
+        if root is None:
             return 0
-        if root.left == None and root.right == None:
-            return 2 * base + root.val
-        base = 2 * base + root.val
-        return self.dfs_sum(root.left, base) + self.dfs_sum(root.right, base)
+
+        if root.left is None and root.right is None:
+            return 2*bit_sum + root.val
+
+        bit_sum = 2*bit_sum + root.val
+
+        left_sum = self.dfs_sum(root.left,bit_sum)
+        right_sum =  self.dfs_sum(root.right,bit_sum)
+
+        return  left_sum+right_sum
+
+
+    def sumRootToLeaf(self, root: TreeNode) -> int:
+
+        return self.dfs_sum(root, 0)
+
 
