@@ -12,6 +12,8 @@
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 
+# Definition for a binary tree node.
+
 class TreeNode:
     def __init__(self, x):
         self.val = x
@@ -19,23 +21,35 @@ class TreeNode:
         self.right = None
 
 
+"""
+解题思路：DFS + 最大最小值寻找
+"""
+
+
 class Solution:
+    def __init__(self):
+        pass
+
+    def find_minmax_diff_dfs(self, root, _min_value, _max_value):
+        # 从根节点搜索最大绝对值差值
+        if root is None:
+            return abs(_min_value - _max_value)
+        # 更新最大值和最小值
+        if root.val > _max_value:
+            _max_value = root.val
+        elif root.val < _min_value:
+            _min_value = root.val
+
+        # 利用递归获得左右子树的最大绝对值差
+        left_minmax_diff = self.find_minmax_diff_dfs(root.left, _min_value, _max_value)
+        right_minmax_diff = self.find_minmax_diff_dfs(root.right, _min_value, _max_value)
+
+        # 选择最大值进行返回
+        return max(left_minmax_diff, right_minmax_diff)
+
     def maxAncestorDiff(self, root: TreeNode) -> int:
-        #思路：递归加深度遍历，找左右子树的最小最大值
-        def findmaxmin(node,min_,max_):
-            # 如果为空，则进行最大最小值相减
-            if node == None:
-                return max_ - min_
-            # 如果大于最大值更新
-            if node.val > max_:
-                max_ = node.val
-            # 如果小于最小值更新
-            if node.val < min_:
-                min_ = node.val
-            # 左右最大距离
-            left_distance = findmaxmin(node.left,min_,max_)
-            right_distance = findmaxmin(node.right,min_,max_)
-            # 获得最终最大距离
-            return max(left_distance,right_distance)
-        res = findmaxmin(root,min_ = root.val,max_ = root.val)
-        return res
+
+        if root is None:
+            return 0
+
+        return self.find_minmax_diff_dfs(root, root.val, root.val)

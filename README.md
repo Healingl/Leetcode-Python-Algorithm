@@ -685,14 +685,39 @@ class Solution(object):
 **思路：**
 
 ```
-深度优先搜索算法，每个节点与其子节点进行值的绝对值相减
+采用DFS，对每个节点的值进行比较更新，找出子树中的最大最小值，并设定空节点的返回值为最大值减去最小值的绝对值，获取左右子树中的最大差值，从而返回结果
 ```
-
-
 
 **解题代码：**
 
 ```
+class Solution:
+    def __init__(self):
+        pass
+
+    def find_minmax_diff_dfs(self, root, _min_value, _max_value):
+        # 从根节点搜索最大绝对值差值
+        if root is None:
+            return abs(_min_value - _max_value)
+        # 更新最大值和最小值
+        if root.val > _max_value:
+            _max_value = root.val
+        elif root.val < _min_value:
+            _min_value = root.val
+
+        # 利用递归获得左右子树的最大绝对值差
+        left_minmax_diff = self.find_minmax_diff_dfs(root.left, _min_value, _max_value)
+        right_minmax_diff = self.find_minmax_diff_dfs(root.right, _min_value, _max_value)
+
+        # 选择最大值进行返回
+        return max(left_minmax_diff, right_minmax_diff)
+
+    def maxAncestorDiff(self, root: TreeNode) -> int:
+
+        if root is None:
+            return 0
+
+        return self.find_minmax_diff_dfs(root, root.val, root.val)
 
 ```
 
@@ -782,5 +807,817 @@ class Solution:
                 dep += 1            #连续的‘-’只加深度不加值
         addTree(val, dep)           #末尾剩余的数字也要加进树
         return ans[0]
+```
+
+
+
+### 11.二叉树的坡度
+
+**题目：**
+
+给定一个二叉树，计算整个树的坡度。
+
+一个树的节点的坡度定义即为，该节点左子树的结点之和和右子树结点之和的差的绝对值。空结点的的坡度是0。
+
+整个树的坡度就是其所有节点的坡度之和。
+
+示例:
+
+```
+输入: 
+         1
+       /   \
+      2     3
+输出: 1
+解释: 
+结点的坡度 2 : 0
+结点的坡度 3 : 0
+结点的坡度 1 : |2-3| = 1
+树的坡度 : 0 + 0 + 1 = 1
+
+```
+
+注意：
+
+1. 任何子树的结点的和不会超过32位整数的范围。
+2. 坡度的值不会超过32位整数的范围。
+
+
+
+**思路：**
+
+```
+利用DFS思想，使用递归函数计算树中每个节点下面（包括其自身）的结点和，在递归过程中计算左子树的结点之和和右子树结点之和的差的绝对值并利用全局变量进行累加，从而获得整个树的坡度。
+```
+
+
+
+**解题代码：**
+
+```
+# Definition for a binary tree node.
+class TreeNode:
+    def __init__(self, x):
+        self.val = x
+        self.left = None
+        self.right = None
+
+class Solution:
+    def __init__(self):
+        self.filt_sum = 0
+    # 我们使用递归函数 cal_sum，在任何结点调用该函数，都会返回当前结点下面（包括其自身）的结点和。
+    def cal_sum(self,root):
+
+        # 递归终止条件
+        if root is None:
+            return 0
+        # 该节点左子树的结点之和和右子树结点之和
+        left_tree_filt = self.cal_sum(root.left)
+        right_tree_filt = self.cal_sum(root.right)
+
+        # 节点的坡度为左子树的结点之和和右子树结点之和的差的绝对值，filt_sum+=坡度  即为总坡度
+        self.filt_sum = self.filt_sum + abs(left_tree_filt-right_tree_filt)
+
+        # 返回当前结点下面（包括其自身）的结点和
+        return root.val + left_tree_filt + right_tree_filt
+
+    def findTilt(self, root: TreeNode) -> int:
+        self.cal_sum(root)
+        return self.filt_sum
+```
+
+
+
+
+
+### 12.另一个树的子树
+
+**题目：**
+
+给定两个非空二叉树 s 和 t，检验 s 中是否包含和 t 具有相同结构和节点值的子树。s 的一个子树包括 s 的一个节点和这个节点的所有子孙。s 也可以看做它自身的一棵子树。
+
+示例1:
+
+给定的树s：
+
+```
+     3
+    / \
+   4   5
+  / \
+ 1   2
+```
+
+给定的树 t：
+
+```
+   4 
+  / \
+ 1   2
+```
+
+返回 **true**，因为 t 与 s 的一个子树拥有相同的结构和节点值。
+
+示例 2:
+给定的树 s：
+
+```
+     3
+    / \
+   4   5
+  / \
+ 1   2
+    /
+   0
+```
+
+给定的树 t：
+
+```
+   4
+  / \
+ 1   2
+```
+
+返回 **false**。
+
+
+
+**思路：**
+
+```
+本题的问题可以转化为判断t是否和树s的任意子树相等，这个题的做法就是在s的每个子节点上，判断该子节点是否和t相等
+
+判断两个树是否相等的三个条件是与的关系，即：
+1.当前两个树的根节点值相等；
+2.并且，s 的左子树和 t 的左子树相等；
+3.并且，s 的右子树和 t 的右子树相等。
+
+而判断 t 是否为 s 的子树的三个条件是或的关系，即：
+1.当前两棵树相等；
+2.或者，t 是 s 的左子树；
+3.或者，t 是 s 的右子树。
+
+```
+
+
+
+**解题代码：**
+
+```
+# Definition for a binary tree node.
+class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+class Solution:
+    def __init__(self):
+        self.isSub = False
+
+    def isSameTree(self,s,t):
+
+        if s is None and t is None:
+            return True
+
+        if s is None or t is None:
+            return False
+
+        """
+        判断两个树是否相等的三个条件是与的关系，即：
+        1.当前两个树的根节点值相等；
+        2.并且，s 的左子树和 t 的左子树相等；
+        3.并且，s 的右子树和 t 的右子树相等。
+        """
+        return s.val == t.val and self.isSameTree(s.left,t.left) and self.isSameTree(s.right,t.right)
+
+    def isSubtree(self, s: TreeNode, t: TreeNode) -> bool:
+        if s is None and t is None:
+            return True
+        if s is None or t is None:
+            return False
+        """
+        判断两个树是否相等的三个条件是与的关系，即：
+        1.当前两棵树相等；
+        2.或者，t 是 s 的左子树；
+        3.或者，t 是 s 的右子树
+        """
+        return self.isSameTree(s,t) or self.isSubtree(s.left,t) or self.isSubtree(s.right,t)
+
+```
+
+
+
+
+
+### 13.根据二叉树创建字符串
+
+**题目：**
+
+你需要采用前序遍历的方式，将一个二叉树转换成一个由括号和整数组成的字符串。
+
+空节点则用一对空括号 "()" 表示。而且你需要省略所有不影响字符串与原始二叉树之间的一对一映射关系的空括号对。
+
+示例1 :
+
+```
+输入: 二叉树: [1,2,3,4]
+       1
+     /   \
+    2     3
+   /    
+  4     
+
+输出: "1(2(4))(3)"
+
+解释: 原本将是“1(2(4)())(3())”，
+在你省略所有不必要的空括号对之后，
+它将是“1(2(4))(3)”。
+
+```
+
+
+
+示例2 :
+
+```
+输入: 二叉树: [1,2,3,null,4]
+       1
+     /   \
+    2     3
+     \  
+      4 
+
+输出: "1(2()(4))(3)"
+
+解释: 和第一个示例相似，
+除了我们不能省略第一个对括号来中断输入和输出之间的一对一映射关系。
+```
+
+
+
+**思路：**
+
+```
+
+```
+
+
+
+**解题代码：**
+
+```
+
+```
+
+
+
+
+
+### 14.从前序遍历和中序遍历序列构造二叉树
+
+**题目：**
+
+根据一棵树的前序遍历与中序遍历构造二叉树。
+
+**注意:**
+你可以假设树中没有重复的元素。
+
+例如，给出
+
+```
+前序遍历 preorder = [3,9,20,15,7]
+中序遍历 inorder = [9,3,15,20,7]
+```
+
+返回如下的二叉树：
+
+```
+    3
+   / \
+  9  20
+    /  \
+   15   7
+```
+
+**思路：**
+
+![image-20200522104011853](README.assets/image-20200522104011853.png)
+
+```
+根据中序遍历和前序遍历的特点，不断递归确定根节点与左右子树的分界线，在「递归」地遍历某个子树的过程中，我们也是将这颗子树看成一颗全新的树，按照上述的顺序进行遍历。挖掘「前序遍历」和「中序遍历」的性质，我们就可以得出本题的做法。
+```
+
+
+
+**解题代码：**
+
+```
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, x):
+#         self.val = x
+#         self.left = None
+#         self.right = None
+class Solution:
+    def buildTree(self, preorder: List[int], inorder: List[int]) -> TreeNode:
+        def myBuildTree(preorder_left: int, preorder_right: int, inorder_left: int, inorder_right: int):
+            if preorder_left > preorder_right:
+                return None
+            
+            # 前序遍历中的第一个节点就是根节点
+            preorder_root = preorder_left
+            # 在中序遍历中定位根节点
+            inorder_root = index[preorder[preorder_root]]
+            
+            # 先把根节点建立出来
+            root = TreeNode(preorder[preorder_root])
+            # 得到左子树中的节点数目
+            size_left_subtree = inorder_root - inorder_left
+            # 递归地构造左子树，并连接到根节点
+            # 先序遍历中「从 左边界+1 开始的 size_left_subtree」个元素就对应了中序遍历中「从 左边界 开始到 根节点定位-1」的元素
+            root.left = myBuildTree(preorder_left + 1, preorder_left + size_left_subtree, inorder_left, inorder_root - 1)
+            # 递归地构造右子树，并连接到根节点
+            # 先序遍历中「从 左边界+1+左子树节点数目 开始到 右边界」的元素就对应了中序遍历中「从 根节点定位+1 到 右边界」的元素
+            root.right = myBuildTree(preorder_left + size_left_subtree + 1, preorder_right, inorder_root + 1, inorder_right)
+            return root
+        
+        n = len(preorder)
+
+		# 构造哈希映射，帮助我们快速定位根节点
+        index = {element: i for i, element in enumerate(inorder)}
+        return myBuildTree(0, n - 1, 0, n - 1)
+
+    	
+```
+
+
+
+
+
+### 15.检查子树
+
+**题目：**
+检查子树。你有两棵非常大的二叉树：T1，有几万个节点；T2，有几万个节点。设计一个算法，判断 T2 是否为 T1 的子树。
+
+如果 T1 有这么一个节点 n，其子树与 T2 一模一样，则 T2 为 T1 的子树，也就是说，从节点 n 处把树砍断，得到的树与 T2 完全相同。
+
+示例1:
+
+```
+ 输入：t1 = [1, 2, 3], t2 = [2]
+ 输出：true
+```
+
+示例2:
+
+```
+ 输入：t1 = [1, null, 2, 4], t2 = [3, 2]
+ 输出：false
+```
+
+
+
+**思路：**
+
+```
+
+```
+
+
+
+**解题代码：**
+
+```
+# Definition for a binary tree node.
+class TreeNode:
+    def __init__(self, x):
+        self.val = x
+        self.left = None
+        self.right = None
+
+class Solution:
+    def __init__(self):
+        self.filt_sum = 0
+
+    def cal_filt(self,root):
+        if root is None:
+            return 0
+        # 获得左右子树
+        left_tree_filt = self.cal_filt(root.left)
+        right_tree_filt = self.cal_filt(root.right)
+
+        self.filt_sum = self.filt_sum + abs(left_tree_filt-right_tree_filt)
+
+        return root.val + left_tree_filt + right_tree_filt
+
+    def findTilt(self, root: TreeNode) -> int:
+        self.cal_filt(root)
+        return self.filt_sum
+```
+
+
+
+### 16.两颗二叉搜索树中的所有元素
+
+**题目：**
+
+给你 `root1` 和 `root2` 这两棵二叉搜索树。
+
+请你返回一个列表，其中包含 **两棵树** 中的所有整数并按 **升序** 排序。.
+
+示例1:
+
+![img](README.assets/q2-e1.png)
+
+```
+输入：root1 = [2,1,4], root2 = [1,0,3]
+输出：[0,1,1,2,3,4]
+```
+
+示例2：
+
+```
+输入：root1 = [0,-10,10], root2 = [5,1,7,0,2]
+输出：[-10,0,0,1,2,5,7,10]
+```
+
+示例3：
+
+```
+输入：root1 = [], root2 = [5,1,7,0,2]
+输出：[0,1,2,5,7]
+```
+
+示例4：
+
+```
+输入：root1 = [0,-10,10], root2 = []
+输出：[-10,0,10]
+```
+
+示例5：
+
+![img](README.assets/q2-e5-.png)
+
+```
+输入：root1 = [1,null,8], root2 = [8,1]
+输出：[1,1,8,8]
+```
+
+**提示：**
+
+- 每棵树最多有 `5000` 个节点。
+- 每个节点的值在 `[-10^5, 10^5]` 之间。
+
+
+
+**思路：**
+
+```
+
+```
+
+
+
+**解题代码：**
+
+```
+
+```
+
+
+
+### 17.二叉树的中序遍历
+
+**题目：**
+
+给定一个二叉树，计算整个树的坡度。
+
+一个树的节点的坡度定义即为，该节点左子树的结点之和和右子树结点之和的差的绝对值。空结点的的坡度是0。
+
+整个树的坡度就是其所有节点的坡度之和。
+
+示例:
+
+```
+输入: 
+         1
+       /   \
+      2     3
+输出: 1
+解释: 
+结点的坡度 2 : 0
+结点的坡度 3 : 0
+结点的坡度 1 : |2-3| = 1
+树的坡度 : 0 + 0 + 1 = 1
+
+```
+
+注意：
+
+1. 任何子树的结点的和不会超过32位整数的范围。
+2. 坡度的值不会超过32位整数的范围。
+
+
+
+**思路：**
+
+```
+
+```
+
+
+
+**解题代码：**
+
+```
+
+```
+
+
+
+### 18.合并二叉树
+
+**题目：**
+
+给定一个二叉树，计算整个树的坡度。
+
+一个树的节点的坡度定义即为，该节点左子树的结点之和和右子树结点之和的差的绝对值。空结点的的坡度是0。
+
+整个树的坡度就是其所有节点的坡度之和。
+
+示例:
+
+```
+输入: 
+         1
+       /   \
+      2     3
+输出: 1
+解释: 
+结点的坡度 2 : 0
+结点的坡度 3 : 0
+结点的坡度 1 : |2-3| = 1
+树的坡度 : 0 + 0 + 1 = 1
+
+```
+
+注意：
+
+1. 任何子树的结点的和不会超过32位整数的范围。
+2. 坡度的值不会超过32位整数的范围。
+
+
+
+**思路：**
+
+```
+
+```
+
+
+
+**解题代码：**
+
+```
+
+```
+
+
+
+### 19.不同的二叉搜索树II
+
+**题目：**
+
+给定一个二叉树，计算整个树的坡度。
+
+一个树的节点的坡度定义即为，该节点左子树的结点之和和右子树结点之和的差的绝对值。空结点的的坡度是0。
+
+整个树的坡度就是其所有节点的坡度之和。
+
+示例:
+
+```
+输入: 
+         1
+       /   \
+      2     3
+输出: 1
+解释: 
+结点的坡度 2 : 0
+结点的坡度 3 : 0
+结点的坡度 1 : |2-3| = 1
+树的坡度 : 0 + 0 + 1 = 1
+
+```
+
+注意：
+
+1. 任何子树的结点的和不会超过32位整数的范围。
+2. 坡度的值不会超过32位整数的范围。
+
+
+
+**思路：**
+
+```
+
+```
+
+
+
+**解题代码：**
+
+```
+
+```
+
+
+
+### 20.不同的二叉搜索树
+
+**题目：**
+
+给定一个二叉树，计算整个树的坡度。
+
+一个树的节点的坡度定义即为，该节点左子树的结点之和和右子树结点之和的差的绝对值。空结点的的坡度是0。
+
+整个树的坡度就是其所有节点的坡度之和。
+
+示例:
+
+```
+输入: 
+         1
+       /   \
+      2     3
+输出: 1
+解释: 
+结点的坡度 2 : 0
+结点的坡度 3 : 0
+结点的坡度 1 : |2-3| = 1
+树的坡度 : 0 + 0 + 1 = 1
+
+```
+
+注意：
+
+1. 任何子树的结点的和不会超过32位整数的范围。
+2. 坡度的值不会超过32位整数的范围。
+
+
+
+**思路：**
+
+```
+
+```
+
+
+
+**解题代码：**
+
+```
+
+```
+
+
+
+### 21.验证二叉搜索树
+
+**题目：**
+
+给定一个二叉树，计算整个树的坡度。
+
+一个树的节点的坡度定义即为，该节点左子树的结点之和和右子树结点之和的差的绝对值。空结点的的坡度是0。
+
+整个树的坡度就是其所有节点的坡度之和。
+
+示例:
+
+```
+输入: 
+         1
+       /   \
+      2     3
+输出: 1
+解释: 
+结点的坡度 2 : 0
+结点的坡度 3 : 0
+结点的坡度 1 : |2-3| = 1
+树的坡度 : 0 + 0 + 1 = 1
+
+```
+
+注意：
+
+1. 任何子树的结点的和不会超过32位整数的范围。
+2. 坡度的值不会超过32位整数的范围。
+
+
+
+**思路：**
+
+```
+
+```
+
+
+
+**解题代码：**
+
+```
+
+```
+
+
+
+
+
+
+
+## 动态规划
+
+### 1.最长回文子串
+
+**题目：**
+
+给定一个字符串 `s`，找到 `s` 中最长的回文子串。你可以假设 `s` 的最大长度为 1000。
+
+示例1:
+
+```
+输入: "babad"
+输出: "bab"
+注意: "aba" 也是一个有效答案
+
+```
+
+示例 2：
+
+```
+输入: "cbbd"
+输出: "bb"
+```
+
+
+
+**思路：**
+
+```
+一、暴力破解法
+下标法，
+```
+
+
+
+- 动态规划法：
+
+对于一个子串而言，如果它是回文串，并且长度大于 22，那么将它首尾的两个字母去除之后，它仍然是个回文串。例如对于字符串 “ababa”，如果我们已经知道 “bab” 是回文串，那么 “ababa” 一定是回文串，这是因为它的首尾两个字母都是 “a”。
+
+![image-20200522110450895](README.assets/image-20200522110450895.png)
+
+动态规划的状态转移方程：
+
+![image-20200522110518484](README.assets/image-20200522110518484.png)
+
+上文的所有讨论是建立在子串长度大于 22 的前提之上的，我们还需要考虑动态规划中的边界条件，即子串的长度为 11 或 22。对于长度为 11 的子串，它显然是个回文串；对于长度为 22 的子串，只要它的两个字母相同，它就是一个回文串。因此我们就可以写出动态规划的边界条件：
+
+![image-20200522110542238](README.assets/image-20200522110542238.png)
+
+根据这个思路，我们就可以完成动态规划了，最终的答案即为所有
+$$
+P(i, j) = \text{true}P(i,j)=true   
+$$
+中 j-i+1（即子串长度）的最大值。注意：在状态转移方程中，我们是从长度较短的字符串向长度较长的字符串进行转移的，因此一定要注意动态规划的循环顺序。
+
+
+
+**解题代码：**
+
+```
+class Solution:
+    def longestPalindrome(self, s: str) -> str:
+        n = len(s)
+        dp = [[False] * n for _ in range(n)]
+        ans = ""
+        # 枚举子串的长度 l+1
+        for l in range(n):
+            # 枚举子串的起始位置 i，这样可以通过 j=i+l 得到子串的结束位置
+            for i in range(n):
+                j = i + l
+                if j >= len(s):
+                    break
+                if l == 0:
+                    dp[i][j] = True
+                elif l == 1:
+                    dp[i][j] = (s[i] == s[j])
+                else:
+                    dp[i][j] = (dp[i + 1][j - 1] and s[i] == s[j])
+                if dp[i][j] and l + 1 > len(ans):
+                    ans = s[i:j+1]
+        return ans
 ```
 
