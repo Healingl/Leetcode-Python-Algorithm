@@ -1,6 +1,10 @@
 # Leetcode-Python-Algorithm
 使用python刷leetcode
 
+## **目录**
+
+[TOC]
+
 
 
 ## 树
@@ -131,6 +135,8 @@ class Solution:
 
 **解题代码：**
 
+利用性质破解：
+
 ```
 
 # Definition for a binary tree node.
@@ -168,6 +174,25 @@ class Solution:
             if self.nodeValueList[i] >= self.nodeValueList[i + 1]:
                 self.isBST = False
         return self.isBST
+```
+
+利用递归破解：
+
+```
+class Solution:
+    def isValidBST(self, root: TreeNode) -> bool:
+        
+        def dfs(root, min_node, max_node):
+            if not root: return True
+            
+            if min_node and root.val <= min_node.val: return False
+            elif max_node and root.val >= max_node.val: return False
+            left_flag = dfs(root.left, min_node, root)
+            right_flag = dfs(root.right, root, max_node)
+            
+            return left_flag and right_flag
+        
+        return dfs(root, None, None)
 ```
 
 
@@ -1500,7 +1525,10 @@ class Solution:
 **思路：**
 
 ```
-
+迭代求解，两颗树的合并可分为三种情况：
+1.如果当前位置的两个节点均不存在，则返回空
+2.如果当前位置仅有一个节点存在，则返回存在的那个节点
+3.如果当前位置节点均存在，则进行节点值加和并赋值给t1的节点，创建t1的左右子树，并返回t1
 ```
 
 
@@ -1508,7 +1536,32 @@ class Solution:
 **解题代码：**
 
 ```
+# Definition for a binary tree node.
+class TreeNode:
+    def __init__(self, x):
+        self.val = x
+        self.left = None
+        self.right = None
 
+class Solution:
+    def mergeTrees(self, t1: TreeNode, t2: TreeNode) -> TreeNode:
+        # 1.如果当前位置的两个节点均不存在，则返回空
+        if t1 is None and t2 is None:
+            return None
+        # 2.如果当前位置仅有一个节点存在，则返回存在的那个节点
+        if t1 is None:
+            return t2
+        if t2 is None:
+            return t1
+
+        # 3. 如果当前位置节点均存在，则进行节点值加和并赋值给t1的节点，创建t1的左右子树，并返回t1
+        t1.val += t2.val
+
+        # 对下一个位置进行遍历
+        t1.left = self.mergeTrees(t1.left,t2.left)
+        t1.right = self.mergeTrees(t1.right,t2.right)
+
+        return  t1
 ```
 
 
@@ -1557,7 +1610,15 @@ class Solution:
 **解题代码：**
 
 ```
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, x):
+#         self.val = x
+#         self.left = None
+#         self.right = None
 
+class Solution:
+    def generateTrees(self, n: int) -> List[TreeNode]:
 ```
 
 

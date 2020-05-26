@@ -18,7 +18,6 @@ class TreeNode:
         self.left = None
         self.right = None
 
-
 class Solution:
     def buildTree(self, preorder: list, inorder: list) -> TreeNode:
         def myBuildTree(preorder_left: int, preorder_right: int, inorder_left: int, inorder_right: int):
