@@ -1302,15 +1302,107 @@ class Solution:
 **思路：**
 
 ```
+方法一，简单的思路是中序遍历加插入排序，但是这样会造成时间超出限制的情况，时间复杂度较高。
 
+方法二，中序遍历加归并排序。方法一中并没有用到二叉搜索树本身的性质。如果我们对二叉搜索树进行中序遍历，就可以直接得到树中所有元素升序排序后的结果，而两个有序数组的合并恰好与归并排序中的合并操作一致，因此可以通过归并排序中的合并操作让两个有序数组合成一个有序数组。
+因此我们可以对两棵树分别进行中序遍历，得到数组 v1 和 v2，它们分别存放了两棵树中的所有元素，且均已有序。在这之后，我们通过归并排序的方法对 v1 和 v2 进行排序，就可以得到最终的结果。
 ```
 
 
 
 **解题代码：**
 
+方法一，简单的思路是中序遍历加插入排序，超出时间限制：
+
+```
+# Definition for a binary tree node.
+class TreeNode:
+    def __init__(self, x):
+        self.val = x
+        self.left = None
+        self.right = None
+
+class Solution:
+    def __init__(self):
+        self.allElementsList = []
+    def insert_sort(self, items):
+        for i in range(1, len(items)):
+            for j in range(i,0,-1):
+                if items[j] < items[j-1]:
+                    items[j], items[j-1] = items[j-1], items[j]
+        return items
+    def inOrder(self,root):
+        stack = []
+        while stack or root:
+            while root:
+                # pre
+                stack.append(root)
+                root = root.left
+
+            root = stack.pop()
+            # in
+            self.allElementsList.append(root.val)
+            root = root.right
+
+    def getAllElements(self, root1: TreeNode, root2: TreeNode) -> list:
+        self.inOrder(root1)
+        self.inOrder(root2)
+        return self.insert_sort(self.allElementsList)
 ```
 
+方法二，中序遍历加归并排序：
+
+```
+# Definition for a binary tree node.
+class TreeNode:
+    def __init__(self, x):
+        self.val = x
+        self.left = None
+        self.right = None
+
+class Solution:
+
+    def merge(self, left, right):
+        """
+        合并操作
+        :param left:
+        :param right:
+        :return:
+        """
+
+        l, r = 0, 0
+        result = []
+        while l < len(left) and r < len(right):
+            if left[l] < right[r]:  # 筛选排序将left与right最小元素按序加入新序列
+                result.append(left[l])
+                l += 1
+            else:
+                result.append(right[r])
+                r += 1
+        result += left[l:]
+        result += right[r:]
+        return result
+
+    def inOrder(self,root:TreeNode,order_list:list)-> list:
+
+        stack = []
+        while stack or root:
+            while root:
+                # pre
+                stack.append(root)
+                root = root.left
+
+            root = stack.pop()
+            # in
+            order_list.append(root.val)
+            root = root.right
+        return order_list
+    def getAllElements(self, root1: TreeNode, root2: TreeNode) -> list:
+        list1 = []
+        list2 = []
+        list1 = self.inOrder(root1,list1)
+        list2 = self.inOrder(root2,list2)
+        return self.merge(list1,list2)
 ```
 
 
@@ -1342,7 +1434,7 @@ class Solution:
 **思路：**
 
 ```
-非递归中序遍历
+非递归中序遍历,照常写下来即可
 ```
 
 
@@ -1350,7 +1442,26 @@ class Solution:
 **解题代码：**
 
 ```
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, x):
+#         self.val = x
+#         self.left = None
+#         self.right = None
 
+class Solution:
+    def inorderTraversal(self, root: TreeNode) -> List[int]:
+        inorderList = []
+        stack = []
+        while stack or root:
+            while root:
+                stack.append(root)
+                root = root.left
+            root = stack.pop()
+            inorderList.append(root.val)
+            root = root.right
+        
+        return inorderList
 ```
 
 
