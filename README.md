@@ -135,7 +135,7 @@ class Solution:
 
 **解题代码：**
 
-利用性质破解：
+利用性质破解，中序遍历加数组检查：
 
 ```
 
@@ -176,23 +176,60 @@ class Solution:
         return self.isBST
 ```
 
-利用递归破解：
+利用性质破解，在中序遍历的过程中加入数组检查：
 
 ```
 class Solution:
-    def isValidBST(self, root: TreeNode) -> bool:
+    def isValidBST(self, root):
+        """
+        :type root: TreeNode
+        :rtype: bool
+        """
+        stack, inorder = [], float('-inf')
         
-        def dfs(root, min_node, max_node):
-            if not root: return True
+        while stack or root:
+            while root:
+                stack.append(root)
+                root = root.left
+            root = stack.pop()
+            # 如果中序遍历得到的节点的值小于等于前一个 inorder，说明不是二叉搜索树
+            if root.val <= inorder:
+                return False
+            inorder = root.val
+            root = root.right
+
+        return True
+
+```
+
+递归求解，由题目给出的信息我们可以知道：如果该二叉树的左子树不为空，则左子树上所有节点的值均小于它的根节点的值； 若它的右子树不空，则右子树上所有节点的值均大于它的根节点的值；它的左右子树也为二叉搜索树。
+
+这启示我们设计一个递归函数 helper(root, lower, upper) 来递归判断，函数表示考虑以 root 为根的子树，判断子树中所有节点的值是否都在 (l,r)(l,r) 的范围内（注意是开区间）。如果 root 节点的值 val 不在 (l,r)(l,r) 的范围内说明不满足条件直接返回，否则我们要继续递归调用检查它的左右子树是否满足，如果都满足才说明这是一棵二叉搜索树。
+
+```
+class Solution:
+    def isValidBST(self, root):
+        """
+        :type root: TreeNode
+        :rtype: bool
+        """
+        def helper(node, lower = float('-inf'), upper = float('inf')):
+            if not node:
+                return True
             
-            if min_node and root.val <= min_node.val: return False
-            elif max_node and root.val >= max_node.val: return False
-            left_flag = dfs(root.left, min_node, root)
-            right_flag = dfs(root.right, root, max_node)
-            
-            return left_flag and right_flag
-        
-        return dfs(root, None, None)
+            val = node.val
+            if val <= lower or val >= upper:
+                return False
+
+            if not helper(node.right, val, upper):
+                return False
+            if not helper(node.left, lower, val):
+                return False
+            return True
+
+        return helper(root)
+
+
 ```
 
 
@@ -1566,7 +1603,86 @@ class Solution:
 
 
 
-### 19.不同的二叉搜索树II
+### 19.不同的二叉搜索树
+
+**题目：**
+
+给定一个整数 *n*，求以 1 ... *n* 为节点组成的二叉搜索树有多少种？
+
+示例:
+
+```
+输入: 3
+输出: 5
+解释:
+给定 n = 3, 一共有 5 种不同结构的二叉搜索树:
+
+   1         3     3      2      1
+    \       /     /      / \      \
+     3     2     1      1   3      2
+    /     /       \                 \
+   2     1         2                 3
+```
+
+
+
+**思路：**
+
+**特性**：给定整数n，生成二叉搜索树的数量为卡特兰数，即：
+$$
+C_{n+1}=C_{0}C_{n}+C_{1}C_{n-1}+...+C_{n}C_{0}
+$$
+也即：
+$$
+C_{n}=C_{0}C_{n-1}+C_{1}C_{n-2}+...+C_{n-1}C_{0}
+$$
+递推公式：
+
+- 假设n个节点存在二叉排序树的个数是G(n)，令f(i)为以i为根的二叉搜索树的个数，则：
+  ![image-20200527101855540](README.assets/image-20200527101855540.png)
+
+- 当i为根节点时，其左子树节点个数为i-1个，右子树节点为n-i，则：
+
+  ![image-20200527102004943](README.assets/image-20200527102004943.png)
+
+- 综合两个公式可以得到 [卡特兰数](https://baike.baidu.com/item/卡特兰数) 公式
+
+$$
+G_{n}=G_{0}G_{n-1}+G_{1}G_{n-2}+...+G_{n-1}G_{0}
+$$
+
+
+
+
+
+**解题代码：**
+
+```
+class Solution:
+    def numTrees(self, n):
+        """
+        :type n: int
+        :rtype: int
+        """
+        if n < 1:
+            return 0
+
+        dp_list = [0 for i in range(n+1)]
+
+        dp_list[0] = 1
+        dp_list[1] = 1
+
+        for i in range(2,n+1,1):
+            for j in range(1,i+1,1):
+                dp_list[i] = dp_list[i] + dp_list[j-1]*dp_list[i-j]
+        return dp_list[n]
+```
+
+
+
+
+
+### 20.不同的二叉搜索树II
 
 **题目：**
 
@@ -1601,64 +1717,62 @@ class Solution:
 
 **思路：**
 
-```
+我们跟随上文的逻辑，只是这次是构建具体的树，而不是计数。
 
-```
+算法
 
+我们从序列 1 ..n 中取出数字 i，作为当前树的树根。于是，剩余 i - 1 个元素可用于左子树，n - i 个元素用于右子树。
+如 前文所述，这样会产生 G(i - 1) 种左子树 和 G(n - i) 种右子树，其中 G 是卡特兰数。
 
+![img](README.assets/f709dff506c20ac970d4cd7ace0436aafca7828c67b510cdbaaa60d54f5479b3-image.png)
+
+现在，我们对序列 1 ... i - 1 重复上述过程，以构建所有的左子树；然后对 i + 1 ... n 重复，以构建所有的右子树。
+
+这样，我们就有了树根 i 和可能的左子树、右子树的列表。
+
+最后一步，对两个列表循环，将左子树和右子树连接在根上。
 
 **解题代码：**
 
 ```
-# Definition for a binary tree node.
-# class TreeNode:
-#     def __init__(self, x):
-#         self.val = x
-#         self.left = None
-#         self.right = None
-
+class TreeNode:
+    def __init__(self, x):
+        self.val = x
+        self.left = None
+        self.right = None
 class Solution:
-    def generateTrees(self, n: int) -> List[TreeNode]:
+    def generateTrees(self, n):
+        """
+        :type n: int
+        :rtype: List[TreeNode]
+        """
+
+        def generate_trees(start, end):
+            if start > end:
+                return [None, ]
+
+            all_trees = []
+            for i in range(start, end + 1):  # pick up a root
+                # all possible left subtrees if i is choosen to be a root
+                left_trees = generate_trees(start, i - 1)
+
+                # all possible right subtrees if i is choosen to be a root
+                right_trees = generate_trees(i + 1, end)
+
+                # connect left and right subtrees to the root i
+                for l in left_trees:
+                    for r in right_trees:
+                        current_tree = TreeNode(i)
+                        current_tree.left = l
+                        current_tree.right = r
+                        all_trees.append(current_tree)
+
+            return all_trees
+
+        return generate_trees(1, n) if n else []
 ```
 
 
-
-### 20.不同的二叉搜索树
-
-**题目：**
-
-给定一个整数 *n*，求以 1 ... *n* 为节点组成的二叉搜索树有多少种？
-
-示例:
-
-```
-输入: 3
-输出: 5
-解释:
-给定 n = 3, 一共有 5 种不同结构的二叉搜索树:
-
-   1         3     3      2      1
-    \       /     /      / \      \
-     3     2     1      1   3      2
-    /     /       \                 \
-   2     1         2                 3
-```
-
-
-
-**思路：**
-
-```
-
-```
-
-
-
-**解题代码：**
-
-```
-
-```
 
 
 
@@ -1701,7 +1815,7 @@ class Solution:
 **思路：**
 
 ```
-
+与“合法二叉搜索树”一致，递归或者中序遍历两种方式实现即可
 ```
 
 
@@ -1709,7 +1823,26 @@ class Solution:
 **解题代码：**
 
 ```
+class Solution:
+    def isValidBST(self, root):
+        """
+        :type root: TreeNode
+        :rtype: bool
+        """
+        stack, inorder = [], float('-inf')
+        
+        while stack or root:
+            while root:
+                stack.append(root)
+                root = root.left
+            root = stack.pop()
+            # 如果中序遍历得到的节点的值小于等于前一个 inorder，说明不是二叉搜索树
+            if root.val <= inorder:
+                return False
+            inorder = root.val
+            root = root.right
 
+        return True
 ```
 
 
