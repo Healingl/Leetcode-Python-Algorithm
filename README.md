@@ -2027,7 +2027,7 @@ f[1] =min{f[-1]+1, f[-4]+1,f[-6]+1}=正无穷,
 
 ![image-20200522110518484](README.assets/image-20200522110518484.png)
 
-上文的所有讨论是建立在子串长度大于 22 的前提之上的，我们还需要考虑动态规划中的边界条件，即子串的长度为 11 或 22。对于长度为 11 的子串，它显然是个回文串；对于长度为 22 的子串，只要它的两个字母相同，它就是一个回文串。因此我们就可以写出动态规划的边界条件：
+上文的所有讨论是建立在子串长度大于 2的前提之上的，我们还需要考虑动态规划中的边界条件，即子串的长度为 1或 2。对于长度为 1 的子串，它显然是个回文串；对于长度为 2的子串，只要它的两个字母相同，它就是一个回文串。因此我们就可以写出动态规划的边界条件：
 
 ![image-20200522110542238](README.assets/image-20200522110542238.png)
 
@@ -2053,24 +2053,160 @@ $$
 ```
 class Solution:
     def longestPalindrome(self, s: str) -> str:
+        if s is None:
+            return s
+
+        if len(s) == 0 or len(s) > 1000:
+            return ''
+
         n = len(s)
-        dp = [[False] * n for _ in range(n)]
+        # 创建dp table
+        dp = [[False] * n]*n
+
         ans = ""
-        # 枚举子串的长度 l+1
+        # 遍历dp table， l表示回文字符串长度
         for l in range(n):
             # 枚举子串的起始位置 i，这样可以通过 j=i+l 得到子串的结束位置
             for i in range(n):
+                # 遍历右上角的dp table
                 j = i + l
+
+                # 边界条件
                 if j >= len(s):
                     break
+
+                # l == 0 时， j =i+0 =i，处于对角线
                 if l == 0:
                     dp[i][j] = True
+                # l == 1 时， j =i+1，字符串长度为2
                 elif l == 1:
                     dp[i][j] = (s[i] == s[j])
                 else:
-                    dp[i][j] = (dp[i + 1][j - 1] and s[i] == s[j])
+                    dp[i][j] = (dp[i+1][j-1] and s[i] == s[j])
+
+                # 如果dp table对应i，j坐标的值为true，并且回文字符串长度大于ans，则更新ans
                 if dp[i][j] and l + 1 > len(ans):
-                    ans = s[i:j+1]
+                    ans = s[i:j + 1]
+
         return ans
+```
+
+
+
+### 2.最大子序和
+
+**题目：**
+
+给定一个整数数组 `nums` ，找到一个具有最大和的连续子数组（子数组最少包含一个元素），返回其最大和。
+
+**示例:**
+
+```
+输入: [-2,1,-3,4,-1,2,1,-5,4],
+输出: 6
+解释: 连续子数组 [4,-1,2,1] 的和最大，为 6。
+```
+
+进阶:
+
+如果你已经实现复杂度为 O(*n*) 的解法，尝试使用更为精妙的分治法求解。
+
+
+
+**思路：**
+
+动态规划法：
+
+
+
+
+
+**代码：**
+
+直接利用dp tables，时间复杂度为O(n^2)
+
+```
+class Solution:
+    def maxSubArray(self, nums: list) -> int:
+
+        if len(nums) == 0:
+            return None
+
+        if len(nums) == 1:
+            return nums[0]
+
+        len_nums = len(nums)
+        # 创建dp table
+        dp = [[None]*len_nums for _ in range(len_nums)]
+
+        max_sum = -float('inf')
+
+        for i in range(len_nums):
+            for j in range(i, len_nums):
+
+                if i == j:
+                    dp[i][j] = nums[i]
+                else:
+                    dp[i][j] = dp[i][j-1] + nums[j]
+
+                if dp[i][j] is not None and int(dp[i][j]) > max_sum:
+                    max_sum = int(dp[i][j])
+
+        return max_sum
+```
+
+
+
+分析题目,发现可以分段进行最大和求值，即：
+
+![image-20200603172711648](README.assets/image-20200603172711648.png)
+
+，因此可以通过一维数组直接求解：
+
+```
+from typing import List
+
+
+class Solution:
+    def maxSubArray(self, nums: List[int]) -> int:
+        size = len(nums)
+        if size == 0:
+            return 0
+        dp = [0 for _ in range(size)]
+
+        dp[0] = nums[0]
+        for i in range(1, size):
+            dp[i] = max(dp[i - 1] + nums[i], nums[i])
+        return max(dp)
+```
+
+直接利用nums作为dp table
+
+```
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+class Solution:
+    def maxSubArray(self, nums: list) -> int:
+
+        if len(nums) == 0:
+            return None
+
+        if len(nums) == 1:
+            return nums[0]
+
+        len_nums = len(nums)
+        
+        max_sum = nums[0]
+        
+        # 利用nums创建dp table
+        for i in range(1,len_nums):
+        	nums[i] = max(nums[i-1]+nums[i], nums[i]) 
+        	if nums[i] > max_sum:
+        		max_sum = nums[i]
+            
+
+        return max_sum
+
 ```
 
