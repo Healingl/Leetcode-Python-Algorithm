@@ -2115,9 +2115,7 @@ class Solution:
 
 **思路：**
 
-动态规划法：
-
-
+动态规划法
 
 
 
@@ -2208,5 +2206,186 @@ class Solution:
 
         return max_sum
 
+```
+
+
+
+### 3.正则表达式
+
+**题目：**
+
+给你一个字符串 `s` 和一个字符规律 `p`，请你来实现一个支持 `'.'` 和 `'*'` 的正则表达式匹配。
+
+```
+'.' 匹配任意单个字符
+'*' 匹配零个或多个前面的那一个元素
+```
+
+所谓匹配，是要涵盖 **整个** 字符串 `s`的，而不是部分字符串。
+
+**说明:**
+
+- `s` 可能为空，且只包含从 `a-z` 的小写字母。
+- `p` 可能为空，且只包含从 `a-z` 的小写字母，以及字符 `.` 和 `*`。
+
+示例 1:
+
+```
+输入:
+s = "aa"
+p = "a"
+输出: false
+解释: "a" 无法匹配 "aa" 整个字符串。
+```
+
+
+示例 2:
+
+```
+输入:
+s = "aa"
+p = "a*"
+输出: true
+解释: 因为 '*' 代表可以匹配零个或多个前面的那一个元素, 在这里前面的元素就是 'a'。因此，字符串 "aa" 可被视为 'a' 重复了一次。
+```
+
+
+示例 3:
+
+```
+输入:
+s = "ab"
+p = ".*"
+输出: true
+解释: ".*" 表示可匹配零个或多个（'*'）任意字符（'.'）。
+```
+
+
+示例 4:
+
+```
+输入:
+s = "aab"
+p = "c*a*b"
+输出: true
+解释: 因为 '*' 表示零个或多个，这里 'c' 为 0 个, 'a' 被重复一次。因此可以匹配字符串 "aab"。
+```
+
+
+示例 5:
+
+```
+输入:
+s = "mississippi"
+p = "mis*is*p*."
+输出: false
+```
+
+
+
+**思路：**
+
+动态规划
+
+![image-20200608112714712](README.assets/image-20200608112714712.png)
+
+![image-20200608112615115](README.assets/image-20200608112615115.png)
+
+
+
+**代码：**
+
+```
+class Solution(object):
+    def isMatch(self, text, pattern):
+        dp = [[False] * (len(pattern) + 1) for _ in range(len(text) + 1)]
+
+        dp[-1][-1] = True
+        for i in range(len(text), -1, -1):
+            for j in range(len(pattern) - 1, -1, -1):
+                first_match = i < len(text) and pattern[j] in {text[i], '.'}
+                if j+1 < len(pattern) and pattern[j+1] == '*':
+                    dp[i][j] = dp[i][j+2] or first_match and dp[i+1][j]
+                else:
+                    dp[i][j] = first_match and dp[i+1][j+1]
+
+        return dp[0][0]
+
+```
+
+
+
+### 4.不同路径
+
+**题目：**
+
+一个机器人位于一个 m x n 网格的左上角 （起始点在下图中标记为“Start” ）。
+
+机器人每次只能向下或者向右移动一步。机器人试图达到网格的右下角（在下图中标记为“Finish”）。
+
+问总共有多少条不同的路径？
+
+![img](README.assets/robot_maze.png)
+
+例如，上图是一个7 x 3 的网格。有多少可能的路径？
+
+**示例 1:**
+
+```
+输入: m = 3, n = 2
+输出: 3
+解释:
+从左上角开始，总共有 3 条路径可以到达右下角。
+1. 向右 -> 向右 -> 向下
+2. 向右 -> 向下 -> 向右
+3. 向下 -> 向右 -> 向右
+```
+
+**示例 2:**
+
+```
+输入: m = 7, n = 3
+输出: 28
+```
+
+**提示：**
+
+- `1 <= m, n <= 100`
+- 题目数据保证答案小于等于 `2 * 10 ^ 9`
+
+
+
+
+
+**思路：**
+
+采用动态规划思路，列出状态规划公式，边界条件：
+
+![img](README.assets/d5395f2a9ebad482ccd90527cddce687.jpg)
+
+
+
+
+
+**代码：**
+
+```
+class Solution:
+    def uniquePaths(self, m: int, n: int) -> int:
+        if m < 1 or m > 100:
+            return 0
+        if n < 1 or n > 100:
+            return 0
+        # 创建dp table
+        dp = [[0 for _ in range(n)] for _ in range(m)]
+        
+        for i in range(m):
+            for j in range(n):
+                if i == 0 or j == 0:
+                    dp[i][j] = 1
+                else:
+                    dp[i][j] = dp[i-1][j] +dp[i][j-1]
+
+        return dp[m-1][n-1]
 ```
 
